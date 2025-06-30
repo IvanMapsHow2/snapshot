@@ -14,10 +14,12 @@
 #   topologies and geometric networks, aren't copied.
 
 #HOW TO USE
-#   Write a script that calls this script and passes arguments per arguments described in
+#   Write a calling script that calls this script and passes arguments per arguments described in
 #   script's section that is commented w/
 #   #***** GET ARGUMENTS *****.
-#   Then run or schedule the calling script.
+#
+#   When scheduling this script to run as a scheduled task, set up the calling script with this command:
+#      <program files>\ArcGIS\Pro\bin\Python\scripts\propy.bat <this script file> <arguments>
 
 #HISTORY
 #   DATE         ORGANIZATION     PROGRAMMER          NOTES
@@ -32,6 +34,8 @@
 #                                                     allows a script to call this script
 #                                                     multiple times, once for each of a set
 #                                                     of geodatabases.
+#   06/30/2025   VCGI             Ivan Brown          Modernized script to run on Python 3.11.8
+#                                                     and ArcGIS Pro 3.6 (arcpy).
 
 #PSEUDO CODE
 #   Set major variables (via script arguments), including:
@@ -73,10 +77,10 @@
 #      -list of all snapshot-geodatabases (and their approximate sizes) in snapshot-geodatabase folder
 
 #IMPORT MODULES
-print "IMPORTING MODULES..."
+print("IMPORTING MODULES...")
 import time, datetime, calendar, sys, os, os.path, smtplib, arcpy
 
-print "SETTING MAJOR VARIABLES BY READING ARGUMENTS..."
+print("SETTING MAJOR VARIABLES BY READING ARGUMENTS...")
 #***** GET ARGUMENTS *****
 #
 #      PASS ARGUMENTS TO SCRIPT IN SAME ORDER AS PRESENTED HERE, WHICH IS:
@@ -310,7 +314,7 @@ def make_note(the_note, print_it = False, email_it = False):
    log_file.write(the_note)
    log_file.close()
    if print_it == True:
-      print the_note
+      print(the_note)
    if email_it == True:
       global email_content
       email_content += the_note
@@ -445,7 +449,7 @@ try:
    if time_for_snapshot == True:
       #CREATE SNAPSHOT GEODATABASE
       snapshot_gdb_name = "SNAPSHOT_" + gdb_nickname + "_" + today8 + ".gdb"
-      arcpy.CreateFileGDB_management(snapshot_folder, snapshot_gdb_name)
+      arcpy.management.CreateFileGDB(snapshot_folder, snapshot_gdb_name)
       snapshot_gdb_path = snapshot_folder + "\\" + snapshot_gdb_name
       make_note("Created snapshot geodatabase " + snapshot_gdb_name + ".", True, True)
 
@@ -496,12 +500,12 @@ try:
       for i in fds_list:
          j = get_name(i)
          if (len(include_list) > 0 and j.upper() in included_fds and j.upper() not in excluded_fds) or (len(include_list) == 0 and j.upper() not in excluded_fds):
-            arcpy.CreateFeatureDataset_management(snapshot_gdb_path, j, i)
+            arcpy.management.CreateFeatureDataset(snapshot_gdb_path, j, i)
             fc_list = arcpy.ListFeatureClasses("*", "All", i)
             for k in fc_list:
                l = get_name(k)
                if l.upper() not in excluded_other:
-                  arcpy.Copy_management(i + "\\" + k, snapshot_gdb_path + "\\" + j + "\\" + l)
+                  arcpy.management.Copy(i + "\\" + k, snapshot_gdb_path + "\\" + j + "\\" + l)
                   make_note("Copied feature-class " + i + "\\" + k + " to snapshot geodatabase.", True, True)
 
       #WORK STAND-ALONE FEATURE-CLASSES
@@ -509,7 +513,7 @@ try:
       for i in fc_list:
          j = get_name(i)
          if (len(include_list) > 0 and j.upper() in included_other and j.upper() not in excluded_other) or (len(include_list) == 0 and j.upper() not in excluded_other):
-            arcpy.Copy_management(i, snapshot_gdb_path + "\\" + j)
+            arcpy.management.Copy(i, snapshot_gdb_path + "\\" + j)
             make_note("Copied feature-class " + i + " to snapshot geodatbase.", True, True)
 
       #WORK TABLES
@@ -517,7 +521,7 @@ try:
       for i in table_list:
          j = get_name(i)
          if (len(include_list) > 0 and j.upper() in included_other and j.upper() not in excluded_other) or (len(include_list) == 0 and j.upper() not in excluded_other):
-            arcpy.Copy_management(i, snapshot_gdb_path + "\\" + j)
+            arcpy.management.Copy(i, snapshot_gdb_path + "\\" + j)
             make_note("Copied table " + i + " to snapshot geodatbase.", True, True)
 
       #WORK RASTER DATASETS
@@ -526,7 +530,7 @@ try:
          for i in raster_list:
             j = get_name(i)
             if (len(include_list) > 0 and j.upper() in included_other and j.upper() not in excluded_other) or (len(include_list) == 0 and j.upper() not in excluded_other):
-               arcpy.Copy_management(i, snapshot_gdb_path + "\\" + j)
+               arcpy.management.Copy(i, snapshot_gdb_path + "\\" + j)
                make_note("Copied raster " + i + " to snapshot geodatbase.", True, True)
 
       #GET SNAPSHOT-GEODATABASE'S 8-CHARACTER DATE AND SIZE INTO snapshots LIST
